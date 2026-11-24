@@ -31,6 +31,16 @@ CORE_LINKS = [
 # Customer attachment links (addressed later, in the L3VPN section).
 CE_LINKS = [("CE1", "PE1"), ("CE2", "PE2"), ("CE3", "PE3"), ("CE4", "PE4")]
 
+# Section 3 (BGP). Provider AS, and one test prefix per PE from the RFC 5737 documentation
+# range. Each stands in for "a customer block this PE serves" until the L3VPN section, and is
+# nailed to Null0 so BGP has something real to originate and reflect.
+ASN = 65000
+PES = ["PE1", "PE2", "PE3", "PE4"]
+BGP_TEST_PREFIX = {
+    "PE1": "203.0.113.0/26", "PE2": "203.0.113.64/26",
+    "PE3": "203.0.113.128/26", "PE4": "203.0.113.192/26",
+}
+
 
 def loopback(node):
     return f"10.255.0.{NODES[node]}"
@@ -104,7 +114,45 @@ def stage_11_isis(node):
                       " isis network point-to-point"]
         lines += ["exit", "!"]
     lines += ["router isis PING", f" net {isis_net(node)}", " is-type level-2-only",
-              " metric-style wide", " log-adjacency-changes", "exit", "!"]
+              " metric-style wide"]
+    if node == "RR":
+        # E05/E07: the RR must never carry transit traffic, e.g. if the P3-P4 link fails.
+        lines.append(" set-overload-bit")
+    lines += [" log-adjacency-changes", "exit", "!"]
+    return lines
+
+
+def stage_16_bgp(node):
+    """End of Section 3: iBGP from every PE to the RR over loopbacks; the RR reflects.
+
+    P routers stay BGP-free (E17). Each PE originates one test prefix (BGP_TEST_PREFIX).
+    """
+    lines = stage_11_isis(node)
+    if node in PES:
+        lines += [f"ip route {BGP_TEST_PREFIX[node]} Null0", "!",
+                  f"router bgp {ASN}",
+                  f" bgp router-id {loopback(node)}",
+                  f" neighbor {loopback('RR')} remote-as {ASN}",
+                  f" neighbor {loopback('RR')} description RR",
+                  f" neighbor {loopback('RR')} update-source lo",
+                  " !",
+                  " address-family ipv4 unicast",
+                  f"  network {BGP_TEST_PREFIX[node]}",
+                  f"  neighbor {loopback('RR')} next-hop-self",
+                  " exit-address-family",
+                  "exit", "!"]
+    elif node == "RR":
+        lines += [f"router bgp {ASN}",
+                  f" bgp router-id {loopback(node)}",
+                  " neighbor PE peer-group",
+                  f" neighbor PE remote-as {ASN}",
+                  " neighbor PE update-source lo"]
+        lines += [f" neighbor {loopback(pe)} peer-group PE" for pe in PES]
+        lines += [" !",
+                  " address-family ipv4 unicast",
+                  "  neighbor PE route-reflector-client",
+                  " exit-address-family",
+                  "exit", "!"]
     return lines
 
 
@@ -112,6 +160,7 @@ STAGES = {
     "00-base": stage_00_base,
     "06-addressing": stage_06_addressing,
     "11-isis": stage_11_isis,
+    "16-bgp": stage_16_bgp,
 }
 
 DAEMONS = """# FRR daemons for the Ping ISP lab
@@ -178,6 +227,9 @@ def addressing_table():
         rows.append(f"| {lid} | {a} {a_if} — 10.1.{lid}.0 | {b} {b_if} — 10.1.{lid}.1 | 10.1.{lid}.0/31 |")
     rows += ["", "| Router | Loopback0 |", "|---|---|"]
     rows += [f"| {n} | {loopback(n)}/32 |" for n in CORE]
+    rows += ["", f"BGP test prefixes (Section 3, AS {ASN}). RFC 5737 documentation range, nailed to Null0 on each PE:",
+             "", "| PE | Originates |", "|---|---|"]
+    rows += [f"| {pe} | {BGP_TEST_PREFIX[pe]} |" for pe in PES]
     rows += ["", "| CE link | CE side | PE side |", "|---|---|---|"]
     for ce, pe in CE_LINKS:
         ce_if = next(i for i, p, _, _ in IFACES[ce] if p == pe)

@@ -83,9 +83,12 @@ Each episode starts from a known state. Load it with:
 |---|---|---|
 | `00-base` | Hostnames + interface descriptions, no IPs | Start of E06 |
 | `06-addressing` | Loopbacks + all core links addressed | End of E06 / start of Section 2 |
-| `11-isis` | IS-IS level-2 core, wide metrics, passive loopbacks | End of Section 2 / start of Section 3 |
+| `11-isis` | IS-IS level-2 core, wide metrics, passive loopbacks, overload bit on the RR | End of Section 2 / start of Section 3 |
+| `16-bgp` | iBGP from each PE to the RR over loopbacks (next-hop-self); RR reflects; P routers stay BGP-free; each PE originates one test prefix (see ADDRESSING.md) | End of Section 3 / start of Section 4 |
 
-More stages are added as the course is built (`16-bgp`, `26-ldp`, `34-l3vpn`, …).
+More stages are added as the course is built (`26-ldp`, `34-l3vpn`, …).
+
+To check every stage end to end on your own Linux machine (deploys each one and tests IS-IS, the RR overload bit and BGP): `bash .github/test-lab.sh`.
 
 ## Stuck?
 
