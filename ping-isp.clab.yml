@@ -1,0 +1,142 @@
+name: ping-isp
+
+topology:
+  defaults:
+    kind: linux
+    image: quay.io/frrouting/frr:10.2.1
+
+  nodes:
+    P1:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/P1.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+    P2:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/P2.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+    P3:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/P3.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+        - sysctl -w net.mpls.conf.eth4.input=1
+        - sysctl -w net.mpls.conf.eth5.input=1
+    P4:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/P4.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+        - sysctl -w net.mpls.conf.eth4.input=1
+        - sysctl -w net.mpls.conf.eth5.input=1
+    PE1:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/PE1.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+        - sysctl -w net.mpls.conf.eth4.input=1
+    PE2:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/PE2.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+    PE3:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/PE3.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+        - sysctl -w net.mpls.conf.eth4.input=1
+    PE4:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/PE4.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+        - sysctl -w net.mpls.conf.eth3.input=1
+    RR:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/RR.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+        - sysctl -w net.mpls.conf.eth2.input=1
+    CE1:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/CE1.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+    CE2:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/CE2.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+    CE3:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/CE3.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+    CE4:
+      binds:
+        - configs/daemons:/etc/frr/daemons
+        - configs/active/CE4.conf:/etc/frr/frr.conf
+      exec:
+        - sysctl -w net.mpls.platform_labels=1048575
+        - sysctl -w net.mpls.conf.eth1.input=1
+
+  links:
+    - endpoints: ["P1:eth1", "PE1:eth1"]
+    - endpoints: ["P1:eth2", "P2:eth1"]
+    - endpoints: ["P1:eth3", "P3:eth3"]
+    - endpoints: ["P2:eth2", "P4:eth1"]
+    - endpoints: ["P2:eth3", "PE3:eth1"]
+    - endpoints: ["P3:eth1", "PE1:eth2"]
+    - endpoints: ["P3:eth2", "PE2:eth2"]
+    - endpoints: ["P3:eth4", "P4:eth2"]
+    - endpoints: ["P3:eth5", "RR:eth1"]
+    - endpoints: ["P4:eth3", "PE3:eth2"]
+    - endpoints: ["P4:eth4", "PE4:eth2"]
+    - endpoints: ["P4:eth5", "RR:eth2"]
+    - endpoints: ["PE1:eth3", "PE2:eth1"]
+    - endpoints: ["PE1:eth4", "CE1:eth1"]
+    - endpoints: ["PE2:eth3", "CE2:eth1"]
+    - endpoints: ["PE3:eth3", "PE4:eth1"]
+    - endpoints: ["PE3:eth4", "CE3:eth1"]
+    - endpoints: ["PE4:eth3", "CE4:eth1"]
